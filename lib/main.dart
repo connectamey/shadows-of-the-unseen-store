@@ -145,8 +145,8 @@ class InputColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return
       Padding(padding: EdgeInsets.all(16),child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
             decoration: InputDecoration(labelText: 'First Name'),
@@ -161,22 +161,26 @@ class InputColumn extends StatelessWidget {
             decoration: InputDecoration(labelText: 'Medical Record Number'),
           ),
           SizedBox(height: 16,),
+          Text(
+           'No details will be shared with the store.',
+          ),
+          SizedBox(height: 16,),
           Container(
+
             width: double.infinity, // Make the button full width
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/setting');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor, // Set the background color to primary color
-              ),
-              child: Text(
-                Strings.submit,
-                style: TextStyle(
-                  color: Theme.of(context).canvasColor, // Set the text color to primary container color
-                ),
-              ),
-            ),
+            child:           ElevatedButton(
+    style: ElevatedButton.styleFrom(
+    backgroundColor: Theme.of(context).primaryColor, // Set the background color to primary color
+    ),
+                onPressed: () {
+                  context.push('/setting');
+                },
+                child: Text(
+
+                    Strings.submit,
+                  style: TextStyle(
+                    color: Theme.of(context).canvasColor, // Set the text color to primary container color
+                  ),))
           ),
         ],
       ));
@@ -194,7 +198,7 @@ class _ImageColumnState extends State<ImageColumn> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.networkUrl(Uri.parse(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'))
+        'https://github.com/connectamey/shadows-of-the-unseen-store/raw/main/assets/sotu-trailer.mp4'))
       ..initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {});
@@ -202,33 +206,35 @@ class _ImageColumnState extends State<ImageColumn> {
   }
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Center(
-          child: _controller.value.isInitialized
-              ? AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
+    return
+      Padding(padding: EdgeInsets.all(16),child:      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Center(
+            child: _controller.value.isInitialized
+                ? AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            )
+                : Container(),
+          ),IconButton(
+            onPressed: () {
+              setState(() {
+                if (_controller.value.isPlaying) {
+                  _controller.pause();
+                } else {
+                  _controller.play();
+                }
+              });
+            },
+            icon: Icon(
+              _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+            ),
           )
-              : Container(),
-        ),IconButton(
-          onPressed: () {
-            setState(() {
-              if (_controller.value.isPlaying) {
-                _controller.pause();
-              } else {
-                _controller.play();
-              }
-            });
-          },
-          icon: Icon(
-            _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-          ),
-        )
 
-      ],
-    );
+        ],
+      ));
+
   }
 }
