@@ -1,0 +1,10 @@
+{
+  "hello": "Hello $name",
+  "language": "language",
+  "theme": {
+    "theme": "Theme",
+    "system": "System",
+    "dark": "Dark",
+    "light": "Light"
+  }
+}
