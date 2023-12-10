@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:platform_info/platform_info.dart';
 import 'package:video_player/video_player.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -10,16 +11,17 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../controller/ZeroKnowledgeProof.dart';
+import '../controller/zeroknowledgeproof.dart';
 import '../main.dart';
 import '../values/routes.dart';
 import '../values/strings.dart';
+
 List<CameraDescription> _cameras = <CameraDescription>[];
+
 class HomeScreen extends StatefulWidget {
-
   final List<CameraDescription> cameras;
-  const HomeScreen({Key? key, required this.cameras}) : super(key: key);
 
+  const HomeScreen({Key? key, required this.cameras}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -29,29 +31,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     _cameras = widget.cameras;
-    print("version "+Platform.instance.version);
-    print("operatingSystem ");
-    print(Platform.I.operatingSystem);
-    print("processors ");
-    print(platform.numberOfProcessors);
-    print("processors ");
-    print(Platform.I);
-    print(platform.toString());
-    int secretNumber = 18; // Alice's secret
-    ZeroKnowledgeProof zkp = ZeroKnowledgeProof(secretNumber);
+    // print("version "+Platform.instance.version);
+    // print("operatingSystem ");
+    // print(Platform.I.operatingSystem);
+    // print("processors ");
+    // print(platform.numberOfProcessors);
+    // print("processors ");
+    // print(Platform.I);
+    // print(platform.toString());
 
-    // Alice's part
-    BigInt commitment = zkp.generateCommitment();
-
-    // Generate challenge using the transcript
-    BigInt challenge = zkp.generateChallenge();
-
-    // Alice's part: Generates a proof based on the challenge
-    BigInt proof = zkp.generateProof(challenge);
-
-    // Bob's part: Verifies the proof
-    bool isValid = zkp.verify(proof, challenge);
-    print(isValid ? "Proof is valid" : "Proof is invalid");
+    // ZeroKnowledgeProof zkp = ZeroKnowledgeProof("amey-bansod--123");
+    //
+    // // Alice's part
+    // BigInt commitment = zkp.generateCommitment();
+    //
+    // // Generate challenge using the transcript
+    // BigInt challenge = BigInt.parse("147466636240827559798526770070421950252");
+    // print("challenge is " + challenge.toString());
+    //
+    // // Alice's part: Generates a proof based on the challenge
+    // BigInt proof = zkp.generateProof(challenge);
+    // print("proof is " + proof.toString());
+    //
+    // // Bob's part: Verifies the proof
+    // bool isValid = zkp.verify(proof, challenge);
+    // print(isValid ? "Proof is valid" : "Proof is invalid");
     return Scaffold(
       appBar: MyAppBar(Strings.storeName),
       body: Column(
@@ -68,7 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-
         ],
       ),
     );
@@ -99,12 +102,12 @@ class InputDetailsColumn extends StatelessWidget {
     final dOBTextFieldController = TextEditingController();
     final medicalRecordNumberTextFieldController = TextEditingController();
 
-    return
-      Padding(padding: EdgeInsets.all(16),child: Column(
+    return Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset("assets/sotu-logo.png", width: 200, height: 200, fit: BoxFit.cover, package: 'shadows_of_the_unseen_store',),
           TextField(
             decoration: InputDecoration(labelText: Strings.firstName),
             controller: firstNameTextFieldController,
@@ -113,56 +116,128 @@ class InputDetailsColumn extends StatelessWidget {
             decoration: InputDecoration(labelText: Strings.lastName),
             controller: lastNameTextFieldController,
           ),
-          TextField(
-            decoration: InputDecoration(labelText: Strings.dateOfBirth),
-            controller: dOBTextFieldController,
+          GestureDetector(
+            onTap: () async {
+              DateTime? pickedDate = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(1900),
+                lastDate: DateTime.now(),
+              );
+
+              if (pickedDate != null) {
+                String formattedDate =
+                    DateFormat('yyyy-MM-dd').format(pickedDate);
+                dOBTextFieldController.text = formattedDate;
+              }
+            },
+            child: AbsorbPointer(
+              child: TextField(
+                decoration: InputDecoration(labelText: Strings.dateOfBirth),
+                controller: dOBTextFieldController,
+              ),
+            ),
           ),
           TextField(
             decoration: InputDecoration(labelText: Strings.medicalRecordNumber),
             controller: medicalRecordNumberTextFieldController,
           ),
-          SizedBox(height: 16,),
+          SizedBox(height: 16),
           Text(
             Strings.noDetailsSharedNote,
           ),
-          SizedBox(height: 16,),
+          SizedBox(height: 16),
           Container(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                // completeCheckForValidZKP(
+                //     medicalRecordNumberTextFieldController.text,
+                //     firstNameTextFieldController.text,
+                //     lastNameTextFieldController.text,
+                //     dOBTextFieldController.text);
 
-              width: double.infinity, // Make the button full width
-              child:           ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor, // Set the background color to primary color
-                  ),
-                  onPressed: () {
-                    if (firstNameTextFieldController.text.isNotEmpty &&
-                        lastNameTextFieldController.text.isNotEmpty &&
-                        dOBTextFieldController.text.isNotEmpty &&
-                        medicalRecordNumberTextFieldController.text.isNotEmpty) {
-
-                      String inputForZKP = firstNameTextFieldController.text + lastNameTextFieldController.text + dOBTextFieldController.text + medicalRecordNumberTextFieldController.text;
-                    print("input string is " + inputForZKP);
-                      context.push(Routes.systemCheckScreenRoute);
-
-                    } else {
-                      // If the fields are empty show a snackbar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(Strings.incompleteFormErrorNote),
-                        ),
+                if (completeCheckForValidZKP(
+                    "12345", "amey", "bansod", "1999-01-01")) {
+                  context.go(Routes.systemCheckScreenRoute);
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Error"),
+                        content:
+                            Text("You are not qualified to download this game"),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text("OK"),
+                          ),
+                        ],
                       );
-                    }
-                  },
-                  child: Text(
-                    Strings.submit,
-                    style: TextStyle(
-                      color: Theme.of(context).canvasColor, // Set the text color to primary container color
-                    ),))
+                    },
+                  );
+                }
+                ;
+              },
+              child: Text(
+                Strings.submit,
+                style: TextStyle(
+                  color: Theme.of(context).canvasColor,
+                ),
+              ),
+            ),
           ),
         ],
-      ));
+      ),
+    );
+  }
 
+  bool completeCheckForValidZKP(String medicalRecordNumber, String firstName,
+      String lastName, String dob) {
+    ZeroKnowledgeProof zkp = ZeroKnowledgeProof(
+        "${medicalRecordNumber}-${firstName.toLowerCase()}-${lastName.toLowerCase()}-${dob}-na");
+    zkp.generateCommitment();
+    BigInt challenge = BigInt.parse("147466636240827559798526770070421950252");
+    BigInt proof = zkp.generateProof(challenge);
+    bool result = (zkp.verify(proof, challenge) & isAgeGreaterThan18(dob));
+    print("isProofValid " + result.toString());
+    return (zkp.verify(proof, challenge) & isAgeGreaterThan18(dob));
+  }
+
+  bool isAgeGreaterThan18(String dob) {
+    DateTime? pickedDate = DateFormat('yyyy-MM-dd').parse(dob);
+    DateTime currentDate = DateTime.now();
+    int age = currentDate.year - pickedDate.year;
+    int month1 = currentDate.month;
+    int month2 = pickedDate.month;
+    if (month2 > month1) {
+      age--;
+    } else if (month1 == month2) {
+      int day1 = currentDate.day;
+      int day2 = pickedDate.day;
+      if (day2 > day1) {
+        age--;
+      }
+    }
+    bool result = age >= 18;
+
+    ZeroKnowledgeProof zkp = ZeroKnowledgeProof(result.toString());
+
+    BigInt commitment = zkp.generateCommitment();
+
+    BigInt challenge = BigInt.parse("147466636240827559798526770070421950252");
+    BigInt proof = zkp.generateProof(challenge);
+    // print("proof " + proof.toString());
+    return zkp.verify(proof, challenge);
   }
 }
+
 class ImageColumn extends StatefulWidget {
   @override
   _ImageColumnState createState() => _ImageColumnState();
@@ -170,6 +245,7 @@ class ImageColumn extends StatefulWidget {
 
 class _ImageColumnState extends State<ImageColumn> {
   late VideoPlayerController _controller;
+
   @override
   void initState() {
     super.initState();
@@ -180,29 +256,29 @@ class _ImageColumnState extends State<ImageColumn> {
         setState(() {});
       });
   }
+
   @override
   Widget build(BuildContext context) {
-    return
-      Padding(padding: EdgeInsets.all(16),child:      Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: _controller.value.isInitialized
-                ? AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child:
-              CameraExampleHome(),
-              // VideoPlayer(_controller),
+    return Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: _controller.value.isInitialized
+                  ? AspectRatio(
+                      aspectRatio: _controller.value.aspectRatio,
+                      child: CameraExampleHome(),
+                      // VideoPlayer(_controller),
+                    )
+                  : Container(),
             )
-                : Container(),
-          )
-
-        ],
-      ));
-
+          ],
+        ));
   }
 }
+
 /// Camera example home widget.
 class CameraExampleHome extends StatefulWidget {
   /// Default Constructor
@@ -315,6 +391,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
       _initializeCameraController(cameraController.description);
     }
   }
+
   // #enddocregion AppLifecycle
 
   @override
@@ -326,8 +403,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
             decoration: BoxDecoration(
               color: Colors.black,
               border: Border.all(
-                color:
-                controller != null && controller!.value.isRecordingVideo
+                color: controller != null && controller!.value.isRecordingVideo
                     ? Colors.redAccent
                     : Colors.grey,
                 width: 3.0,
@@ -377,14 +453,14 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           controller!,
           child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onScaleStart: _handleScaleStart,
-                  onScaleUpdate: _handleScaleUpdate,
-                  onTapDown: (TapDownDetails details) =>
-                      onViewFinderTap(details, constraints),
-                );
-              }),
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onScaleStart: _handleScaleStart,
+              onScaleUpdate: _handleScaleUpdate,
+              onTapDown: (TapDownDetails details) =>
+                  onViewFinderTap(details, constraints),
+            );
+          }),
         ),
       );
     }
@@ -424,23 +500,23 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                 height: 64.0,
                 child: (localVideoController == null)
                     ? (
-                    // The captured image on the web contains a network-accessible URL
-                    // pointing to a location within the browser. It may be displayed
-                    // either with Image.network or Image.memory after loading the image
-                    // bytes to memory.
-                    kIsWeb
-                        ? Image.network(imageFile!.path)
-                        : Image.file(File(imageFile!.path)))
+                        // The captured image on the web contains a network-accessible URL
+                        // pointing to a location within the browser. It may be displayed
+                        // either with Image.network or Image.memory after loading the image
+                        // bytes to memory.
+                        kIsWeb
+                            ? Image.network(imageFile!.path)
+                            : Image.file(File(imageFile!.path)))
                     : Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.pink)),
-                  child: Center(
-                    child: AspectRatio(
-                        aspectRatio:
-                        localVideoController.value.aspectRatio,
-                        child: VideoPlayer(localVideoController)),
-                  ),
-                ),
+                        decoration: BoxDecoration(
+                            border: Border.all(color: Colors.pink)),
+                        child: Center(
+                          child: AspectRatio(
+                              aspectRatio:
+                                  localVideoController.value.aspectRatio,
+                              child: VideoPlayer(localVideoController)),
+                        ),
+                      ),
               ),
           ],
         ),
@@ -463,20 +539,20 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
             // The exposure and focus mode are currently not supported on the web.
             ...!kIsWeb
                 ? <Widget>[
-              IconButton(
-                icon: const Icon(Icons.exposure),
-                color: Colors.blue,
-                onPressed: controller != null
-                    ? onExposureModeButtonPressed
-                    : null,
-              ),
-              IconButton(
-                icon: const Icon(Icons.filter_center_focus),
-                color: Colors.blue,
-                onPressed:
-                controller != null ? onFocusModeButtonPressed : null,
-              )
-            ]
+                    IconButton(
+                      icon: const Icon(Icons.exposure),
+                      color: Colors.blue,
+                      onPressed: controller != null
+                          ? onExposureModeButtonPressed
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.filter_center_focus),
+                      color: Colors.blue,
+                      onPressed:
+                          controller != null ? onFocusModeButtonPressed : null,
+                    )
+                  ]
                 : <Widget>[],
             IconButton(
               icon: Icon(enableAudio ? Icons.volume_up : Icons.volume_mute),
@@ -579,7 +655,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     style: styleAuto,
                     onPressed: controller != null
                         ? () =>
-                        onSetExposureModeButtonPressed(ExposureMode.auto)
+                            onSetExposureModeButtonPressed(ExposureMode.auto)
                         : null,
                     onLongPress: () {
                       if (controller != null) {
@@ -593,7 +669,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     style: styleLocked,
                     onPressed: controller != null
                         ? () =>
-                        onSetExposureModeButtonPressed(ExposureMode.locked)
+                            onSetExposureModeButtonPressed(ExposureMode.locked)
                         : null,
                     child: const Text('LOCKED'),
                   ),
@@ -619,7 +695,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     max: _maxAvailableExposureOffset,
                     label: _currentExposureOffset.toString(),
                     onChanged: _minAvailableExposureOffset ==
-                        _maxAvailableExposureOffset
+                            _maxAvailableExposureOffset
                         ? null
                         : setExposureOffset,
                   ),
@@ -698,8 +774,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           icon: const Icon(Icons.camera_alt),
           color: Colors.blue,
           onPressed: cameraController != null &&
-              cameraController.value.isInitialized &&
-              !cameraController.value.isRecordingVideo
+                  cameraController.value.isInitialized &&
+                  !cameraController.value.isRecordingVideo
               ? onTakePictureButtonPressed
               : null,
         ),
@@ -707,48 +783,46 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           icon: const Icon(Icons.videocam),
           color: Colors.blue,
           onPressed: cameraController != null &&
-              cameraController.value.isInitialized &&
-              !cameraController.value.isRecordingVideo
+                  cameraController.value.isInitialized &&
+                  !cameraController.value.isRecordingVideo
               ? onVideoRecordButtonPressed
               : null,
         ),
         IconButton(
           icon: cameraController != null &&
-              cameraController.value.isRecordingPaused
+                  cameraController.value.isRecordingPaused
               ? const Icon(Icons.play_arrow)
               : const Icon(Icons.pause),
           color: Colors.blue,
           onPressed: cameraController != null &&
-              cameraController.value.isInitialized &&
-              cameraController.value.isRecordingVideo
+                  cameraController.value.isInitialized &&
+                  cameraController.value.isRecordingVideo
               ? (cameraController.value.isRecordingPaused)
-              ? onResumeButtonPressed
-              : onPauseButtonPressed
+                  ? onResumeButtonPressed
+                  : onPauseButtonPressed
               : null,
         ),
         IconButton(
           icon: const Icon(Icons.stop),
           color: Colors.red,
           onPressed: cameraController != null &&
-              cameraController.value.isInitialized &&
-              cameraController.value.isRecordingVideo
+                  cameraController.value.isInitialized &&
+                  cameraController.value.isRecordingVideo
               ? onStopButtonPressed
               : null,
         ),
         IconButton(
           icon: const Icon(Icons.pause_presentation),
           color:
-          cameraController != null && cameraController.value.isPreviewPaused
-              ? Colors.red
-              : Colors.blue,
+              cameraController != null && cameraController.value.isPreviewPaused
+                  ? Colors.red
+                  : Colors.blue,
           onPressed:
-          cameraController == null ? null : onPausePreviewButtonPressed,
+              cameraController == null ? null : onPausePreviewButtonPressed,
         ),
       ],
     );
   }
-
-
 
   /// Display a row of toggle to select the camera (or a message if no camera is available).
   Widget _cameraTogglesRowWidget() {
@@ -761,7 +835,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
 
       onNewCameraSelected(description);
     }
-
 
     if (_cameras.isEmpty) {
       SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -778,6 +851,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
               groupValue: controller?.description,
               value: cameraDescription,
               onChanged: onChanged,
+              selected: true,
             ),
           ),
         );
@@ -845,12 +919,12 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
         // The exposure mode is currently not supported on the web.
         ...!kIsWeb
             ? <Future<Object?>>[
-          cameraController.getMinExposureOffset().then(
-                  (double value) => _minAvailableExposureOffset = value),
-          cameraController
-              .getMaxExposureOffset()
-              .then((double value) => _maxAvailableExposureOffset = value)
-        ]
+                cameraController.getMinExposureOffset().then(
+                    (double value) => _minAvailableExposureOffset = value),
+                cameraController
+                    .getMaxExposureOffset()
+                    .then((double value) => _maxAvailableExposureOffset = value)
+              ]
             : <Future<Object?>>[],
         cameraController
             .getMaxZoomLevel()
@@ -865,22 +939,22 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           showInSnackBar('You have denied camera access.');
           break;
         case 'CameraAccessDeniedWithoutPrompt':
-        // iOS only
+          // iOS only
           showInSnackBar('Please go to Settings app to enable camera access.');
           break;
         case 'CameraAccessRestricted':
-        // iOS only
+          // iOS only
           showInSnackBar('Camera access is restricted.');
           break;
         case 'AudioAccessDenied':
           showInSnackBar('You have denied audio access.');
           break;
         case 'AudioAccessDeniedWithoutPrompt':
-        // iOS only
+          // iOS only
           showInSnackBar('Please go to Settings app to enable audio access.');
           break;
         case 'AudioAccessRestricted':
-        // iOS only
+          // iOS only
           showInSnackBar('Audio access is restricted.');
           break;
         default:
@@ -1176,10 +1250,10 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     }
 
     final VideoPlayerController vController = kIsWeb
-    // TODO(gabrielokura): remove the ignore once the following line can migrate to
-    // use VideoPlayerController.networkUrl after the issue is resolved.
-    // https://github.com/flutter/flutter/issues/121927
-    // ignore: deprecated_member_use
+        // TODO(gabrielokura): remove the ignore once the following line can migrate to
+        // use VideoPlayerController.networkUrl after the issue is resolved.
+        // https://github.com/flutter/flutter/issues/121927
+        // ignore: deprecated_member_use
         ? VideoPlayerController.network(videoFile!.path)
         : VideoPlayerController.file(File(videoFile!.path));
 
@@ -1229,4 +1303,5 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   void _showCameraException(CameraException e) {
     _logError(e.code, e.description);
     showInSnackBar('Error: ${e.code}\n${e.description}');
-  }}
+  }
+}

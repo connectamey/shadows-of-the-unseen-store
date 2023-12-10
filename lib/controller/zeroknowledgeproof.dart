@@ -1,34 +1,37 @@
 import 'dart:typed_data';
-import 'dart:math';
+import 'dart:convert';
 import 'package:blockchain_utils/blockchain_utils.dart';
+import 'package:crypto/crypto.dart'; // For hashing
+
 class ZeroKnowledgeProof {
-   int secret;
-  final BigInt publicValue;
+  String secret;
+  late final BigInt publicValue;
   late final BigInt blindingFactor;
   late final MerlinTranscript transcript;
   late final BigInt commitment;
 
-  ZeroKnowledgeProof(this.secret)
-      : publicValue = BigInt.from(secret * secret) {
-    transcript = MerlinTranscript("ZeroKnowledgeProof");
+  ZeroKnowledgeProof._(this.secret);
+
+  factory ZeroKnowledgeProof(String secret) {
+    final proof = ZeroKnowledgeProof._(secret);
+    proof.publicValue = BigInt.parse(proof.hashString(secret), radix: 16);
+    proof.transcript = MerlinTranscript("ZeroKnowledgeProof");
     // Add publicValue to the transcript
-    transcript.additionalData("public-value".codeUnits, bigIntToBytes(publicValue));
+    proof.transcript.additionalData("public-value".codeUnits, proof.bigIntToBytes(proof.publicValue));
+    return proof;
   }
 
   BigInt generateCommitment() {
-    int randomNum = Random().nextInt(100);
-    blindingFactor = BigInt.from(randomNum);
+    blindingFactor = BigInt.from(99);
     commitment = blindingFactor * blindingFactor;
-
     transcript.additionalData("commitment".codeUnits, bigIntToBytes(commitment));
     return commitment;
   }
 
-  BigInt generateChallenge() {
-    // Generate a pseudo-random challenge using the transcript
-    List<int> challengeBytes = transcript.toBytes("challenge".codeUnits, 16);
-    return bytesToBigInt(Uint8List.fromList(challengeBytes));
-  }
+  // BigInt generateChallenge() {
+  //   List<int> challengeBytes = transcript.toBytes("challenge".codeUnits, 16);
+  //   return bytesToBigInt(Uint8List.fromList(challengeBytes));
+  // }
 
   BigInt generateProof(BigInt challenge) {
     return publicValue + challenge * blindingFactor;
@@ -36,15 +39,16 @@ class ZeroKnowledgeProof {
 
   bool verify(BigInt proof, BigInt challenge) {
     BigInt expectedProof = publicValue + challenge * blindingFactor;
-    if (secret >= 18) {
-      return proof == expectedProof; // Ensure the proof is equal to expectedProof for secret >= 18
-    } else {
-      return proof != expectedProof; // Ensure the proof is not equal to expectedProof for secret < 18
-    }
+    return proof == expectedProof;
+  }
+
+  String hashString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
   }
 
   Uint8List bigIntToBytes(BigInt bigInt) {
-    // Getting the byte representation of the BigInt
     var bytes = (bigInt.bitLength + 7) >> 3;
     var b256 = BigInt.from(256);
     var result = Uint8List(bytes);
@@ -63,3 +67,4 @@ class ZeroKnowledgeProof {
     return result;
   }
 }
+

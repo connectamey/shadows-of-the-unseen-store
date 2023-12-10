@@ -1,26 +1,29 @@
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sou/screens/homescreen.dart';
+import 'package:sou/screens/systemcheckscreen.dart';
 import 'package:sou/values/routes.dart';
 import 'package:sou/values/strings.dart';
 import 'package:video_player/video_player.dart';
 import 'package:camera/camera.dart';
+
 List<CameraDescription> _cameras = <CameraDescription>[];
 
 final _router = GoRouter(
   routes: [
     GoRoute(
       path: Routes.mainScreenRoute,
-      builder: (context, state) => HomeScreen(cameras: _cameras,),
+      builder: (context, state) => HomeScreen(
+        cameras: _cameras,
+      ),
     ),
     GoRoute(
       path: Routes.systemCheckScreenRoute,
-      builder: (context, state) => PCCheckScreen(),
+      builder: (context, state) => SystemCheckScreen(),
     ),
   ],
 );
+
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
@@ -50,10 +53,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
-
-
-
 class PCCheckScreen extends StatelessWidget {
   const PCCheckScreen({super.key});
 
@@ -80,7 +79,9 @@ class PCCheckScreen extends StatelessWidget {
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String _title;
+
   MyAppBar(this._title);
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -92,4 +93,3 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(56.0);
 }
-
