@@ -3,28 +3,39 @@ import 'dart:js_interop';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sou/screens/homescreen.dart';
+import 'package:sou/values/routes.dart';
 import 'package:sou/values/strings.dart';
 import 'package:video_player/video_player.dart';
-
+import 'package:camera/camera.dart';
+List<CameraDescription> _cameras = <CameraDescription>[];
 
 final _router = GoRouter(
   routes: [
     GoRoute(
-      path: '/',
-      builder: (context, state) => HomeScreen(),
+      path: Routes.mainScreenRoute,
+      builder: (context, state) => HomeScreen(cameras: _cameras,),
     ),
     GoRoute(
-      path: '/setting',
+      path: Routes.systemCheckScreenRoute,
       builder: (context, state) => PCCheckScreen(),
     ),
   ],
 );
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    _cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print(e.code);
+  }
+
+  runApp(MyApp(cameras: _cameras));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final List<CameraDescription> cameras;
+
+  const MyApp({Key? key, required this.cameras}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -81,3 +92,4 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(56.0);
 }
+

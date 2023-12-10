@@ -7,7 +7,8 @@ class Strings {
   static const String checkingPC = "Checking System Requirements";
   static const String firstName = "First Name";
   static const String lastName = "Last Name";
-  static const String age = "Age";
+  static const String dateOfBirth = "Date Of Birth";
   static const String medicalRecordNumber = "Medical Record Number";
   static const String noDetailsSharedNote = "No details will be shared with the store.";
+  static const String incompleteFormErrorNote = "Please fill all the details";
 }
