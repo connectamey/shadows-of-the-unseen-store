@@ -15,7 +15,9 @@ import '../controller/zeroknowledgeproof.dart';
 import '../main.dart';
 import '../values/routes.dart';
 import '../values/strings.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+bool isCameraMounted = false;
 List<CameraDescription> _cameras = <CameraDescription>[];
 
 class HomeScreen extends StatefulWidget {
@@ -154,36 +156,77 @@ class InputDetailsColumn extends StatelessWidget {
                 backgroundColor: Theme.of(context).primaryColor,
               ),
               onPressed: () {
-                // completeCheckForValidZKP(
-                //     medicalRecordNumberTextFieldController.text,
-                //     firstNameTextFieldController.text,
-                //     lastNameTextFieldController.text,
-                //     dOBTextFieldController.text);
-
-                if (completeCheckForValidZKP(
-                    "12345", "amey", "bansod", "1999-01-01")) {
-                  context.go(Routes.systemCheckScreenRoute);
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text("Error"),
-                        content:
-                            Text("You are not qualified to download this game"),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Text("OK"),
-                          ),
-                        ],
-                      );
-                    },
+                if ((firstNameTextFieldController.text.isEmpty ||
+                    lastNameTextFieldController.text.isEmpty ||
+                    dOBTextFieldController.text.isEmpty ||
+                    medicalRecordNumberTextFieldController.text.isEmpty ||
+                    !isCameraMounted)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(Strings.incompleteFormErrorNote),
+                      duration: Duration(seconds: 2),
+                    ),
                   );
+                } else {
+                  String onDeviceZKP = generateValidZKP(
+                      medicalRecordNumberTextFieldController.text,
+                      firstNameTextFieldController.text,
+                      lastNameTextFieldController.text,
+                      dOBTextFieldController.text);
+                  try {
+                    FirebaseFirestore.instance
+                        .collection('zero-knowledge-proofs')
+                        .doc(onDeviceZKP)
+                        .get()
+                        .then((DocumentSnapshot documentSnapshot) {
+                      if (documentSnapshot.exists) {
+                        context.go(Routes.systemCheckScreenRoute);
+                      } else {
+                        throw ("No such document");
+                      }
+                    }).catchError((error) {
+                      print('Error fetching document: $error');
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text("Error"),
+                            content: Text(
+                                "You are not qualified to download this game"),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text("OK"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    });
+                  } catch (e) {
+                    print(e);
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Error"),
+                          content: Text(
+                              "You are not qualified to download this game"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text("OK"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
                 }
-                ;
               },
               child: Text(
                 Strings.submit,
@@ -198,43 +241,15 @@ class InputDetailsColumn extends StatelessWidget {
     );
   }
 
-  bool completeCheckForValidZKP(String medicalRecordNumber, String firstName,
+  String generateValidZKP(String medicalRecordNumber, String firstName,
       String lastName, String dob) {
     ZeroKnowledgeProof zkp = ZeroKnowledgeProof(
-        "${medicalRecordNumber}-${firstName.toLowerCase()}-${lastName.toLowerCase()}-${dob}-na");
+        "${medicalRecordNumber}-${firstName.toLowerCase()}-${lastName.toLowerCase()}-${dob}");
     zkp.generateCommitment();
     BigInt challenge = BigInt.parse("147466636240827559798526770070421950252");
     BigInt proof = zkp.generateProof(challenge);
-    bool result = (zkp.verify(proof, challenge) & isAgeGreaterThan18(dob));
-    print("isProofValid " + result.toString());
-    return (zkp.verify(proof, challenge) & isAgeGreaterThan18(dob));
-  }
-
-  bool isAgeGreaterThan18(String dob) {
-    DateTime? pickedDate = DateFormat('yyyy-MM-dd').parse(dob);
-    DateTime currentDate = DateTime.now();
-    int age = currentDate.year - pickedDate.year;
-    int month1 = currentDate.month;
-    int month2 = pickedDate.month;
-    if (month2 > month1) {
-      age--;
-    } else if (month1 == month2) {
-      int day1 = currentDate.day;
-      int day2 = pickedDate.day;
-      if (day2 > day1) {
-        age--;
-      }
-    }
-    bool result = age >= 18;
-
-    ZeroKnowledgeProof zkp = ZeroKnowledgeProof(result.toString());
-
-    BigInt commitment = zkp.generateCommitment();
-
-    BigInt challenge = BigInt.parse("147466636240827559798526770070421950252");
-    BigInt proof = zkp.generateProof(challenge);
-    // print("proof " + proof.toString());
-    return zkp.verify(proof, challenge);
+    Strings.zkpProof = proof.toString();
+    return proof.toString();
   }
 }
 
@@ -478,7 +493,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
 
     _currentScale = (_baseScale * details.scale)
         .clamp(_minAvailableZoom, _maxAvailableZoom);
-
     await controller!.setZoomLevel(_currentScale);
   }
 
@@ -905,6 +919,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     // If the controller is updated then update the UI.
     cameraController.addListener(() {
       if (mounted) {
+        isCameraMounted = true;
+        print("camera mounted " + isCameraMounted.toString());
         setState(() {});
       }
       if (cameraController.value.hasError) {

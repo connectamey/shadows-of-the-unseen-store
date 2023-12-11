@@ -4,6 +4,30 @@ import 'package:video_player/video_player.dart';
 import 'package:platform_info/platform_info.dart';
 import 'package:get_ip_address/get_ip_address.dart';
 
+import 'dart:convert';
+import 'dart:html';
+import 'dart:typed_data';
+import 'package:js/js.dart'
+    if (dart.library.io) 'package:dart_web3_core/lib/src/browser/js-stub.dart'
+    if (dart.library.js) 'package:js/js.dart';
+import 'package:dart_web3_core/browser.dart'
+    if (dart.library.io) 'package:dart_web3_core/lib/src/browser/dart_wrappers_stub.dart'
+    if (dart.library.js) 'package:dart_web3_core/browser.dart';
+import 'package:dart_web3_core/dart_web3_core.dart';
+
+var credentials;
+late final neweth;
+
+@JS()
+@anonymous
+class JSrawRequestParams {
+  external String get chainId;
+
+  external factory JSrawRequestParams({String chainId});
+}
+
+Future<void> main() async {}
+
 class SystemCheckScreen extends StatefulWidget {
   @override
   _SystemCheckScreenState createState() => _SystemCheckScreenState();
@@ -17,8 +41,8 @@ class _SystemCheckScreenState extends State<SystemCheckScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(
-        'https://github.com/connectamey/shadows-of-the-unseen-store/raw/main/assets/sotu-trailer.mp4')
+
+    _controller = VideoPlayerController.network('assets/sotu-trailer.mp4')
       ..initialize().then((_) {
         setState(() {
           _controller.play();
@@ -42,15 +66,39 @@ class _SystemCheckScreenState extends State<SystemCheckScreen> {
   }
 
   void performSystemCheck() async {
+    final eth = window.ethereum;
+    if (eth == null) {
+      neweth = eth;
+      print('MetaMask is not available');
+      return;
+    }
+
+    final client = Web3Client.custom(eth.asRpcService());
+    credentials = await eth.requestAccount();
+    // you can also use eth.requestAllAccounts() to have an array of all authorized Metamask accounts.
+    print('Using ${credentials.address}');
+    print('Client is listening: ${await client.isListeningForNetwork()}');
+    //
+    // final message = Uint8List.fromList(utf8.encode('Hello from webthree'));
+    // final signature = await credentials.signPersonalMessage(message);
+    // print('Signature: ${base64.encode(signature)}');
+    //
+    // await eth.rawRequest('wallet_switchEthereumChain',
+    //     params: [JSrawRequestParams(chainId: '0x507')]);
+    // final String chainIDHex = await eth.rawRequest('eth_chainId') as String;
+    // final chainID = int.parse(chainIDHex);
+    // print('chainID: $chainID');
+
     try {
       var ipAddress = IpAddress(type: RequestType.json);
 
       dynamic data = await ipAddress.getIpAddress();
       print("ip address " + data.toString());
     } on IpAddressException catch (exception) {
+      systemCheckResult = false;
       print(exception.message);
     }
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 4));
     setState(() {
       if (Platform.I.operatingSystem == OperatingSystem.windows &&
           platform.numberOfProcessors >= 4 &&
@@ -61,6 +109,46 @@ class _SystemCheckScreenState extends State<SystemCheckScreen> {
       }
       // systemCheckResult = true;
     });
+  }
+
+  void sendTransactionToEth() async {
+    final eth = window.ethereum;
+    if (eth == null) {
+      neweth = eth;
+      print('MetaMask is not available');
+      return;
+    }
+
+    final client = Web3Client.custom(eth.asRpcService());
+    credentials = await eth.requestAccount();
+    // you can also use eth.requestAllAccounts() to have an array of all authorized Metamask accounts.
+    print('Using ${credentials.address}');
+    print('Client is listening: ${await client.isListeningForNetwork()}');
+
+    final message = Uint8List.fromList(utf8.encode(Strings.zkpProof));
+    final signature = await credentials.signPersonalMessage(message);
+    print('Signature: ${base64.encode(signature)}');
+
+    await eth.rawRequest('wallet_switchEthereumChain',
+        params: [JSrawRequestParams(chainId: '0xAA36A7')]);
+    final String chainIDHex = await eth.rawRequest('eth_chainId') as String;
+    final chainID = int.parse(chainIDHex);
+    print('chainID: $chainID');
+
+    await client.sendTransaction(
+      credentials,
+      Transaction(
+        to: EthereumAddress.fromHex(
+            '0x0A06e580452216d57b60f0Bd4CA4AE81fc76C5E0'),
+        gasPrice: EtherAmount.inWei(BigInt.from(6640520)),
+        maxGas: 100000,
+        value: EtherAmount.fromDouble(EtherUnit.ether, 0.0001),
+        data: Uint8List.fromList(utf8.encode(Strings.zkpProof)),
+      ),
+    );
+
+    window.location.href =
+        'https://drive.google.com/drive/folders/13L4hL3hbEQHp7oxKdPYZIFop-0tfjgYI';
   }
 
   @override
@@ -135,7 +223,7 @@ class _SystemCheckScreenState extends State<SystemCheckScreen> {
                   if (systemCheckResult == true)
                     ElevatedButton(
                       onPressed: () {
-                        // Download action
+                        sendTransactionToEth();
                       },
                       style: ElevatedButton.styleFrom(
                           foregroundColor:

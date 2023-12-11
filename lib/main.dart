@@ -6,6 +6,8 @@ import 'package:sou/values/routes.dart';
 import 'package:sou/values/strings.dart';
 import 'package:video_player/video_player.dart';
 import 'package:camera/camera.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options-govt.dart';
 
 List<CameraDescription> _cameras = <CameraDescription>[];
 
@@ -27,6 +29,9 @@ final _router = GoRouter(
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     _cameras = await availableCameras();
   } on CameraException catch (e) {
     print(e.code);

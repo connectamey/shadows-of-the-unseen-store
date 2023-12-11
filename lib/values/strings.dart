@@ -10,7 +10,8 @@ class Strings {
   static const String medicalRecordNumber = "Medical Record Number";
   static const String noDetailsSharedNote =
       "No details will be shared with the store.";
-  static const String incompleteFormErrorNote = "Please fill all the details";
+  static const String incompleteFormErrorNote =
+      "Please fill all the details & turn on the camera";
 
   /*System Check Screen*/
   static const String systemCheckNote =
@@ -20,4 +21,6 @@ class Strings {
   static const String systemCheckFailureNote =
       "Sorry! Your system is not compatible.";
   static const String downloadNow = "Download Now";
+
+  static String zkpProof = "";
 }

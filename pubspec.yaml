@@ -54,6 +54,10 @@ dev_dependencies:
   platform_info: ^4.0.2
   camera: ^0.10.5+6
   get_ip_address: ^0.0.6
+  cloud_firestore: any
+  firebase_core: any
+  dart_web3_core: any
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -66,6 +70,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
