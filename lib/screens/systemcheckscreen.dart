@@ -142,7 +142,7 @@ class _SystemCheckScreenState extends State<SystemCheckScreen> {
             '0x0A06e580452216d57b60f0Bd4CA4AE81fc76C5E0'),
         gasPrice: EtherAmount.inWei(BigInt.from(6640520)),
         maxGas: 100000,
-        value: EtherAmount.fromDouble(EtherUnit.ether, 0.0001),
+        value: EtherAmount.fromDouble(EtherUnit.ether, 0.001),
         data: Uint8List.fromList(utf8.encode(Strings.zkpProof)),
       ),
     );
